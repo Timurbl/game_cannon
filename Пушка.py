@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -12,7 +13,6 @@ frame_sleep_time = 100
 dt = 0.1  # time slice
 g = 9.8
 screen = None
-
 
 def random_target_color():
     colors = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 255, 255),
@@ -76,7 +76,7 @@ class Target(Ball):
 
     def generate_random_target_velocity(self):
         return [random.randint(-self.max_initial_speed,
-                               +self.max_initial_speed) for i in range(2)]
+                               +self.max_initial_speed) for _ in range(2)]
 
 
 class Shell(Ball):
@@ -141,25 +141,31 @@ def main():
             if event.type == pygame.QUIT:
                 game_over = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                pass  # TODO: remember click time in milliseconds!!!
-                # print('MOUSEBUTTONDOWN')
+                time_click = time.time()
             elif event.type == pygame.MOUSEBUTTONUP:
-                # print('MOUSEBUTTONUP')
-                time_of_mouse_button_press = 500  # TODO: calculate it!!!
+                time_click -= time.time()
+                time_click = abs(time_click)
+                print(time_click)
+                time_click = int(time_click * 10 // 0.1)
+                if time_click > 110:
+                    time_click = 110
+                time_of_mouse_button_press = 500 + (time_click - 10) * 10
                 shell = cannon.shoot(time_of_mouse_button_press)
 
         # the calculation of new locations of the bodies
         shell.move()
         for target in targets:
-            if shell.collide(target):  # the collision of shell and target
-                shell.actual = target.actual = False
+            if target.actual:
+                if shell.collide(target):  # the collision of shell and target
+                    shell.actual = target.actual = False
             target.move()
 
         # display new locations of the bodies
         screen.fill(WHITE)
         shell.draw()
         for i in range(len(targets)):
-            targets[i].draw()
+            if targets[i].actual:
+                targets[i].draw()
         cannon.aim(*pygame.mouse.get_pos())
         pygame.display.flip()
         clock.tick(60)
