@@ -6,6 +6,8 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+
 WIDTH = 600
 HEIGHT = 400
 
@@ -146,6 +148,7 @@ def main():
     shell = Shell(False)
     clock = pygame.time.Clock()
     score = 0
+    game_time = time.time()
 
     while not game_over:
 
@@ -183,8 +186,18 @@ def main():
                 targets[i].draw()
         cannon.aim(*pygame.mouse.get_pos())
 
-        label = pygame.font.SysFont("comicsansms", 36).render(str(score), True, RED)
-        screen.blit(label, (20, 20))
+        label_time = pygame.font.SysFont("comicsansms", 16).render("Time " + str(int(time.time() - game_time)) + "/60", True, BLUE)
+        screen.blit(label_time, (500, 21))
+
+        label_score = pygame.font.SysFont("comicsansms", 20).render("Score " + str(score), True, RED)
+        screen.blit(label_score, (20, 20))
+
+        if time.time() - game_time >= 60:
+            game_over = True
+            label_game_over = pygame.font.SysFont("comicsansms", 30).render("GAME OVER", True, BLACK)
+            screen.blit(label_game_over, (220, 180))
+            pygame.display.flip()
+            time.sleep(10)
 
         pygame.display.flip()
         clock.tick(60)
