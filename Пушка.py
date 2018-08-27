@@ -78,6 +78,16 @@ class Target(Ball):
         return [random.randint(-self.max_initial_speed,
                                +self.max_initial_speed) for _ in range(2)]
 
+# TODO: SuperTarget
+# class SuperTarget(Target):
+#     def __init__(self):
+#         radius = 10
+#         x, y = self.generate_random_target_coord(radius)
+#         vx, vy = 10, 10
+#         color =
+#
+#         super().__init__(x, y, vx, vy, radius, color)
+
 
 class Shell(Ball):
     shell_color = BLACK
@@ -135,8 +145,13 @@ def main():
     targets = [Target()]
     shell = Shell(False)
     clock = pygame.time.Clock()
+    score = 0
 
     while not game_over:
+
+        if random.randint(1, 200) == 1:
+            targets.append(Target())
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
@@ -145,7 +160,6 @@ def main():
             elif event.type == pygame.MOUSEBUTTONUP:
                 time_click -= time.time()
                 time_click = abs(time_click)
-                print(time_click)
                 time_click = int(time_click * 10 // 0.1)
                 if time_click > 110:
                     time_click = 110
@@ -156,8 +170,9 @@ def main():
         shell.move()
         for target in targets:
             if target.actual:
-                if shell.collide(target):  # the collision of shell and target
+                if shell.collide(target) and shell.actual:  # the collision of shell and target
                     shell.actual = target.actual = False
+                    score += 10
             target.move()
 
         # display new locations of the bodies
@@ -167,6 +182,10 @@ def main():
             if targets[i].actual:
                 targets[i].draw()
         cannon.aim(*pygame.mouse.get_pos())
+
+        label = pygame.font.SysFont("comicsansms", 36).render(str(score), True, RED)
+        screen.blit(label, (20, 20))
+
         pygame.display.flip()
         clock.tick(60)
 
