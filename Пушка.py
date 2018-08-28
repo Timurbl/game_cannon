@@ -16,6 +16,7 @@ dt = 0.1  # time slice
 g = 9.8
 screen = None
 
+
 def random_target_color():
     colors = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 255, 255),
               (255, 255, 0), (255, 0, 255)]
@@ -63,12 +64,20 @@ class Target(Ball):
     min_radius = 10
     max_radius = 50
     max_initial_speed = 10
+    super_target = False
 
-    def __init__(self):
-        r = random.randint(self.min_radius, self.max_radius)
-        x, y = self.generate_random_target_coord(r)
-        vx, vy = self.generate_random_target_velocity()
-        color = random_target_color()
+    def __init__(self, super_target=False):
+        if super_target:
+            r = self.min_radius
+            x, y = self.generate_random_target_coord(r)
+            vx, vy = self.max_initial_speed, self.max_initial_speed
+            color = (0, 0, 0)
+            self.super_target = True
+        else:
+            r = random.randint(self.min_radius, self.max_radius)
+            x, y = self.generate_random_target_coord(r)
+            vx, vy = self.generate_random_target_velocity()
+            color = random_target_color()
         super().__init__(x, y, vx, vy, r, color)
 
     def generate_random_target_coord(self, r):
@@ -79,16 +88,6 @@ class Target(Ball):
     def generate_random_target_velocity(self):
         return [random.randint(-self.max_initial_speed,
                                +self.max_initial_speed) for _ in range(2)]
-
-# TODO: SuperTarget
-# class SuperTarget(Target):
-#     def __init__(self):
-#         radius = 10
-#         x, y = self.generate_random_target_coord(radius)
-#         vx, vy = 10, 10
-#         color =
-#
-#         super().__init__(x, y, vx, vy, radius, color)
 
 
 class Shell(Ball):
@@ -131,7 +130,7 @@ class Cannon:
 def init_screen(*size):
     screen = pygame.display.set_mode(size)
     screen.fill(WHITE)
-    pygame.display.set_caption("My Game")
+    pygame.display.set_caption("Cannon")
     pygame.display.flip()
     return screen
 
@@ -151,9 +150,17 @@ def main():
     game_time = time.time()
 
     while not game_over:
-
+        
         if random.randint(1, 200) == 1:
             targets.append(Target())
+
+        if random.randint(1, 1000) == 1:
+            targets.append(Target(True))
+            timer_super_target = 0
+        try:
+            timer_super_target += 1
+        except NameError:
+            pass
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -175,8 +182,19 @@ def main():
             if target.actual:
                 if shell.collide(target) and shell.actual:  # the collision of shell and target
                     shell.actual = target.actual = False
-                    score += 10
+                    if target.super_target:
+                        score += 50
+                    else:
+                        score += 10
             target.move()
+
+        try:
+            if timer_super_target > 200:
+                for target in targets:
+                    if target.super_target:
+                        target.actual = False
+        except NameError:
+            pass
 
         # display new locations of the bodies
         screen.fill(WHITE)
@@ -186,7 +204,8 @@ def main():
                 targets[i].draw()
         cannon.aim(*pygame.mouse.get_pos())
 
-        label_time = pygame.font.SysFont("comicsansms", 16).render("Time " + str(int(time.time() - game_time)) + "/60", True, BLUE)
+        label_time = pygame.font.SysFont("comicsansms", 16)\
+            .render("Time " + str(int(time.time() - game_time)) + "/60", True, BLUE)
         screen.blit(label_time, (500, 21))
 
         label_score = pygame.font.SysFont("comicsansms", 20).render("Score " + str(score), True, RED)
@@ -197,7 +216,7 @@ def main():
             label_game_over = pygame.font.SysFont("comicsansms", 30).render("GAME OVER", True, BLACK)
             screen.blit(label_game_over, (220, 180))
             pygame.display.flip()
-            time.sleep(10)
+            time.sleep(5)
 
         pygame.display.flip()
         clock.tick(60)
